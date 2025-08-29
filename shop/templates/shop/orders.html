@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Orders</h2>
+<table class="table table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Total Price</th>
+            <th>Order Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for o in orders %}
+        <tr>
+            <td>{{ o.id }}</td>
+            <td>{{ o.product.name }}</td>
+            <td>{{ o.quantity }}</td>
+            <td>${{ o.total_price }}</td>
+            <td>{{ o.order_date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
