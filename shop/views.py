@@ -2,40 +2,39 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db import transaction
 from django.db.models import Sum
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Product, Order
 from .serializers import ProductSerializer, OrderSerializer
+from .forms import ProductForm, OrderForm
 
 
-@api_view(['POST'])
 def add_product(request):
-    serializer = ProductSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    product = serializer.save()
-    return Response(ProductSerializer(product).data)
+    if request.method == "POST":
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("add_product")   
+    else:
+        form = ProductForm()
+
+    products = Product.objects.all()
+    return render(request, "shop/products.html", {"form": form, "products": products})
 
 
-@api_view(['POST'])
 def place_order(request):
-    # Expecting: {"product_id": 1, "quantity": 2}
-    product_id = request.data.get('product_id')
-    qty = int(request.data.get('quantity', 0))
-    if qty <= 0:
-        return Response({'error': 'Quantity must be > 0'}, status=400)
+    if request.method == "POST":
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            order = form.save(commit=False)
+            # calculate total price from product & qty
+            order.total_price = order.product.price * order.quantity
+            order.save()
+            return redirect("place_order")
+    else:
+        form = OrderForm()
 
-
-    try:
-        with transaction.atomic():
-            # select_for_update to lock row and prevent oversell
-            product = Product.objects.select_for_update().get(id=product_id)
-            if product.stock_qty < qty:
-                return Response({'error': 'Insufficient stock'}, status=400)
-            product.stock_qty -= qty
-            product.save()
-            order = Order.objects.create(product=product, quantity=qty, total_price=product.price * qty)
-            return Response({'order_id': order.id, 'total_price': float(order.total_price)})
-    except Product.DoesNotExist:
-        return Response({'error': 'Product not found'}, status=404)
+    orders = Order.objects.all()
+    return render(request, "shop/orders.html", {"form": form, "orders": orders})
 
 
 @api_view(['GET'])
@@ -44,9 +43,10 @@ def top_products(request):
     data = (
     Order.objects.values('product__id', 'product__name')
     .annotate(total_sold=Sum('quantity'))
-    .order_by('-total_sold')[:10]
+    .order_by('-total_sold')
     )
-    return Response(list(data))
+    print("anuj5------", data)
+    return render(request, "shop/top_products.html", {"products": data})
 
 
 @api_view(['GET'])
@@ -57,9 +57,18 @@ def revenue_per_product(request):
     .annotate(revenue=Sum('total_price'))
     .order_by('-revenue')
     )
+    print("anuj6----", data)
     # Return as list of dicts
-    return Response([{'product_id': d['product__id'], 'name': d['product__name'], 'revenue': float(d['revenue'] or 0)} for d in data])
-
+    return render(request, "shop/revenue.html", {
+    "products": [
+        {
+            "product_id": d["product__id"],
+            "name": d["product__name"],
+            "revenue": float(d["revenue"] or 0),
+        }
+        for d in data
+    ]
+})
 
 # Frontend page
 from django.template import loader
@@ -71,4 +80,5 @@ def top_products_page(request):
     .annotate(total_sold=Sum('quantity'))
     .order_by('-total_sold')[:10]
     )
-    return render(request, 'shop/top_products.html', {'products': data})    
+    print("anuj7----", data)
+    return render(request, 'shop/top_10_products.html', {'products': data})    

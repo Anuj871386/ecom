@@ -1,6 +1,18 @@
-{% extends "base.html" %}
+{% extends "shop/base.html" %}
 {% block content %}
 <h2>Orders</h2>
+
+<!-- Order Form -->
+<div class="card p-3 mb-4">
+    <h4>Place New Order</h4>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Place Order</button>
+    </form>
+</div>
+
+<!-- Orders Table -->
 <table class="table table-hover">
     <thead class="table-dark">
         <tr>
@@ -17,11 +29,16 @@
             <td>{{ o.id }}</td>
             <td>{{ o.product.name }}</td>
             <td>{{ o.quantity }}</td>
-            <td>${{ o.total_price }}</td>
+            <td>{{ o.total_price }}</td>
             <td>{{ o.order_date }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No orders found.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% endblock %}
+
 

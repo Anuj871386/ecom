@@ -1,18 +1,20 @@
-{% extends "base.html" %}
+{% extends "shop/base.html" %}
 {% block content %}
 <h2>Revenue Per Product</h2>
 <table class="table table-bordered">
     <thead class="table-dark">
         <tr>
-            <th>Product</th>
+            <th>Product id</th>
+            <th>Product name</th>
             <th>Total Revenue</th>
         </tr>
     </thead>
     <tbody>
-        {% for item in revenue %}
+        {% for item in products %}
         <tr>
-            <td>{{ item.product__name }}</td>
-            <td>${{ item.total_revenue }}</td>
+            <td>{{ item.product_id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.revenue }}</td>
         </tr>
         {% endfor %}
     </tbody>

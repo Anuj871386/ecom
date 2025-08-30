@@ -1,7 +1,19 @@
 {% extends "shop/base.html" %}
 {% block content %}
-<h2>Products</h2>
-<table class="table table-bordered table-striped">
+<center><h2>Products</h2></center>
+
+<!-- Input Form -->
+<div class="card p-3 mb-4">
+    <h4>Add New Product</h4>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Add Product</button>
+    </form>
+</div>
+
+<!-- Products Table -->
+<table class="table table-bordered table-striped w-100">
     <thead class="table-dark">
         <tr>
             <th>ID</th>
@@ -15,10 +27,16 @@
         <tr>
             <td>{{ p.id }}</td>
             <td>{{ p.name }}</td>
-            <td>${{ p.price }}</td>
+            <td>{{ p.price }}</td>
             <td>{{ p.stock_qty }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">No products found.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% endblock %}
+
+
